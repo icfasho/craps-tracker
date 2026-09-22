@@ -34,16 +34,16 @@
       </section>
 
       <section class="bankroll-grid">
-        <label>起始 Bankroll<input id="starting-bankroll" inputmode="decimal" type="number" min="0" step="1" /></label>
+        <label>起始 Bankroll<input id="starting-bankroll" class="quick-input" inputmode="decimal" type="text" /></label>
         <div class="metric"><span>当前 Bankroll</span><strong id="bankroll">$0</strong></div>
         <div class="metric"><span>Session P/L</span><strong id="session-pl">$0</strong></div>
       </section>
 
       <section class="card">
-        <div class="section-heading"><h2>当前下注</h2><span id="odds-warning" class="warning"></span></div>
+        <div class="section-heading"><h2>当前下注</h2><span class="subtle">点一下数字即可覆盖</span></div>
         <div class="bet-grid primary-bets">
-          <label>Pass Line<input id="pass-line" inputmode="decimal" type="number" min="0" step="1" /></label>
-          <label>Odds<input id="odds" inputmode="decimal" type="number" min="0" step="1" /></label>
+          <label>Pass Line<input id="pass-line" class="quick-input" inputmode="decimal" type="text" /></label>
+          <label>Odds<input id="odds" class="quick-input" inputmode="decimal" type="text" /></label>
         </div>
         <p class="hint">Odds 仅在 point 建立后生效；按真实赔率支付，赌场优势为 0%。</p>
         <div class="place-header"><h3>Place Bets</h3><button id="clear-place" class="text-button">清空</button></div>
@@ -51,9 +51,9 @@
       </section>
 
       <section class="card outcomes">
-        <div class="section-heading"><h2>下一掷的结果</h2><span class="subtle">净变化</span></div>
+        <div class="section-heading"><h2>下一掷：重点结果</h2><span class="subtle">净变化</span></div>
+        <p id="outcome-intro" class="outcome-intro"></p>
         <div id="outcome-grid" class="outcome-grid"></div>
-        <div class="summary-row"><span id="target-label">Point 命中</span><strong id="target-win">+$0</strong><span>7-out</span><strong id="seven-loss">-$0</strong></div>
       </section>
 
       <section class="card roll-card">
@@ -62,24 +62,15 @@
         <div class="roll-buttons" id="roll-buttons"></div>
       </section>
 
-      <section class="card settings-card">
-        <div class="section-heading"><h2>桌规</h2><button id="toggle-settings" class="text-button">展开</button></div>
-        <div id="settings-content" class="settings-content hidden">
-          <label>最大 Odds 倍数
-            <select id="max-odds"><option value="2">2x</option><option value="3">3x</option><option value="5">5x</option><option value="10">10x</option><option value="20">20x</option></select>
-          </label>
-          <label>最低下注<input id="table-min" inputmode="decimal" type="number" min="1" step="1" /></label>
-          <p class="hint">不同赌场可能有整数筹码和赔率取整规则；最终以 dealer 的处理和桌规为准。</p>
-        </div>
-      </section>
-
       <section class="card press-card">
-        <div class="section-heading"><h2>Press 计算器</h2><span class="subtle">不是预测</span></div>
+        <div class="section-heading"><h2>Press 赢利分配</h2><span class="subtle">不是预测</span></div>
         <div class="press-controls">
-          <label>当前下注<input id="press-stake" inputmode="decimal" type="number" min="0" step="1" value="18" /></label>
+          <label>哪一注赢了<select id="press-source"></select></label>
+          <label>把赢利放到<select id="press-target"></select></label>
           <label>方式<select id="press-mode"><option value="full">全 Press</option><option value="half">半 Press</option><option value="collect">收下赢利</option></select></label>
         </div>
         <p id="press-result" class="press-result"></p>
+        <button id="apply-press" class="apply-press">应用 Press</button>
         <p class="hint">Press 只是把已赢到的资金重新分配，不能提高骰子结果的可预测性或改变赌场优势。</p>
       </section>
 
