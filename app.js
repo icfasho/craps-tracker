@@ -48,7 +48,10 @@ function syncInputs() {
 function render() {
   $("roll-count").textContent = `${state.rolls} rolls`;
   $("previous-run").textContent = state.runs.length ? `上一段 ${state.runs[0]} rolls（含 7）` : "尚无已结束的段";
-  $("run-history").textContent = state.runs.length ? `最近各段（新 → 旧，含 7）：${state.runs.slice(0, 10).join(" · ")}` : "";
+  $("run-total").textContent = `已结束 ${state.runs.length} 段`;
+  $("run-history").innerHTML = [...state.runs].reverse().map((count, i) =>
+    `<li><span>第 ${i + 1} 段 · 已结束</span><span>${count} rolls</span></li>`
+  ).join("") + `<li><span>第 ${state.runs.length + 1} 段 · ${state.rolls ? "进行中" : "待开始"}</span><span>${state.rolls} rolls</span></li>`;
   const exposure = state.pass + (state.point ? state.odds : 0) + (state.point ? Object.values(state.places).reduce((a,b)=>a+b,0) : 0);
   $("exposure").textContent = money(exposure); $("bankroll").textContent = money(state.bankroll);
   const pl = +(state.bankroll - state.starting).toFixed(2); const plNode = $("session-pl"); plNode.textContent = `${pl >= 0 ? "+" : ""}${money(pl)}`; plNode.className = pl >= 0 ? "positive" : "negative";
