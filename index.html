@@ -10,7 +10,7 @@
     <link rel="manifest" href="manifest.webmanifest" />
     <link rel="apple-touch-icon" href="app-icon.svg" />
     <title>Craps 现场助手</title>
-    <link rel="stylesheet" href="styles.css?v=3" />
+    <link rel="stylesheet" href="styles.css?v=4" />
   </head>
   <body>
     <main class="app-shell">
@@ -29,7 +29,6 @@
         </div>
       </section>
       <p class="hint">每个 7 结束一段，次数包含结束的 7；下一掷从 1 开始。开局的 7 不清台，仍按正常规则结算。</p>
-      <p id="run-history" class="hint"></p>
 
       <section class="bankroll-grid">
         <label>起始 Bankroll<input id="starting-bankroll" class="quick-input" inputmode="decimal" type="text" /></label>
@@ -63,6 +62,12 @@
       <p class="hint">记录赢利后自动询问是否 Press；Press 只分配已赢金额，不预测结果。</p>
 
       <section class="history-section">
+        <div class="section-heading"><h2>每段 Roll 历史</h2><span id="run-total" class="subtle"></span></div>
+        <p class="hint">本 Session 全部记录，按时间先后排列；已结束的段包含最后那个 7。刷新后保留，新 Session 会清空。</p>
+        <ol id="run-history" class="history"></ol>
+      </section>
+
+      <section class="history-section">
         <div class="section-heading"><h2>Roll 记录</h2><button id="clear-history" class="text-button">清除记录</button></div>
         <ol id="history" class="history"></ol>
       </section>
@@ -78,12 +83,12 @@
       <button id="collect-profit" class="apply-press">全部收下，不 Press</button>
       <p class="hint">赢利已经计入 Bankroll。Press 仅增加桌面下注，不会再次记赢利；金额以实际筹码为准。</p>
     </dialog>
-    <script>window.APP_VERSION = "3";</script>
+    <script>window.APP_VERSION = "4";</script>
     <dialog id="install-help" class="install-help">
       <button id="close-install-help" class="close-dialog" aria-label="关闭">×</button>
       <h2>安装到手机</h2>
       <div id="install-help-copy"></div>
     </dialog>
-    <script src="app.js?v=3"></script>
+    <script src="app.js?v=4"></script>
   </body>
 </html>
