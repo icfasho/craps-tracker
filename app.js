@@ -1,7 +1,7 @@
 const PLACE_NUMBERS = [4, 5, 6, 8, 9, 10];
 const oddsMultiplier = { 4: 2, 5: 1.5, 6: 1.2, 8: 1.2, 9: 1.5, 10: 2 };
 const placeMultiplier = { 4: 9 / 5, 5: 7 / 5, 6: 7 / 6, 8: 7 / 6, 9: 7 / 5, 10: 9 / 5 };
-const defaults = { starting: 1000, bankroll: 1000, pass: 25, odds: 0, places: { 4: 0, 5: 0, 6: 18, 8: 18, 9: 0, 10: 0 }, point: null, rolls: 0, maxOdds: 3, tableMin: 15, history: [], snapshots: [] };
+const defaults = { starting: 1000, bankroll: 1000, pass: 25, odds: 0, places: { 4: 0, 5: 0, 6: 18, 8: 18, 9: 0, 10: 0 }, point: null, rolls: 0, history: [], snapshots: [] };
 let state = load();
 const $ = (id) => document.getElementById(id);
 const money = (n) => `${n < 0 ? "-" : ""}$${Math.abs(n).toLocaleString("en-US", { maximumFractionDigits: 2 })}`;
@@ -30,7 +30,6 @@ function nextRollChange(roll) {
 }
 function syncInputs() {
   $("starting-bankroll").value = state.starting; $("pass-line").value = state.pass; $("odds").value = state.odds;
-  $("max-odds").value = state.maxOdds; $("table-min").value = state.tableMin;
   PLACE_NUMBERS.forEach((n) => $("place-" + n).value = state.places[n]);
 }
 function render() {
@@ -38,14 +37,22 @@ function render() {
   const exposure = state.pass + (state.point ? state.odds : 0) + (state.point ? Object.values(state.places).reduce((a,b)=>a+b,0) : 0);
   $("exposure").textContent = money(exposure); $("bankroll").textContent = money(state.bankroll);
   const pl = +(state.bankroll - state.starting).toFixed(2); const plNode = $("session-pl"); plNode.textContent = `${pl >= 0 ? "+" : ""}${money(pl)}`; plNode.className = pl >= 0 ? "positive" : "negative";
-  const allowed = state.pass * state.maxOdds; $("odds-warning").textContent = state.odds > allowed ? `超过 ${state.maxOdds}x 上限（$${allowed}）` : "";
-  $("outcome-grid").innerHTML = [2,3,4,5,6,8,9,10,11,12].map(n => outcomeCard(n)).join("") + outcomeCard(7);
-  const target = state.point || "come-out"; $("target-label").textContent = `命中 ${target}`; setSigned($("target-win"), nextRollChange(state.point || 7)); setSigned($("seven-loss"), nextRollChange(7));
+  renderOutcomes();
   $("history").innerHTML = state.history.length ? state.history.slice(0, 12).map(h => `<li><span>${h.label}</span><span class="${h.delta >= 0 ? "positive" : "negative"}">${h.delta >= 0 ? "+" : ""}${money(h.delta)} · ${money(h.balance)}</span></li>`).join("") : '<li class="empty">还没有记录 roll。</li>';
   renderPress(); save();
 }
-function outcomeCard(n) { const delta = nextRollChange(n); return `<div class="outcome"><b>${n}</b><span class="${delta >= 0 ? "positive" : "negative"}">${delta >= 0 ? "+" : ""}${money(delta)}</span></div>`; }
-function setSigned(node, value) { node.textContent = `${value >= 0 ? "+" : ""}${money(value)}`; node.className = value >= 0 ? "positive" : "negative"; }
+function outcomeCard(label, delta, neutral = false) { return `<div class="outcome"><b>${label}</b><span class="${neutral ? "neutral" : delta >= 0 ? "positive" : "negative"}">${neutral ? "无即时盈亏" : `${delta >= 0 ? "+" : ""}${money(delta)}`}</span></div>`; }
+function renderOutcomes() {
+  if (!state.point) {
+    $("outcome-intro").textContent = "COME OUT：7 / 11 赢 Pass Line；2 / 3 / 12 输 Pass Line；其余数字只会建立 Point。";
+    $("outcome-grid").innerHTML = outcomeCard("7 或 11 · Pass win", nextRollChange(7)) + outcomeCard("2 / 3 / 12 · Pass loss", nextRollChange(2)) + outcomeCard("4 / 5 / 6", 0, true) + outcomeCard("8 / 9 / 10 · 建立 Point", 0, true);
+    return;
+  }
+  $("outcome-intro").textContent = `Point ${state.point} 已开：只需关注 Point made、7-out 和你正在押的 Place 数。`;
+  const cards = [outcomeCard(`Point ${state.point} made`, nextRollChange(state.point)), outcomeCard("7 · 7-out", nextRollChange(7))];
+  PLACE_NUMBERS.filter(n => state.places[n] > 0 && n !== state.point).forEach(n => cards.push(outcomeCard(`Place ${n} hit`, placePayout(n))));
+  $("outcome-grid").innerHTML = cards.join("");
+}
 function recordRoll(roll) {
   state.snapshots.push(structuredClone({ ...state, snapshots: [] }));
   const beforePoint = state.point; const delta = nextRollChange(roll); state.bankroll = +(state.bankroll + delta).toFixed(2); state.rolls += 1;
@@ -58,19 +65,28 @@ function recordRoll(roll) {
   else if (beforePoint && state.places[roll]) event += ` · Place ${roll} paid`;
   state.history.unshift({ label: event, delta, balance: state.bankroll }); syncInputs(); render();
 }
-function renderPress() { const stake = number("press-stake"); const mode = $("press-mode").value; const found = PLACE_NUMBERS.find(n => state.places[n] === stake) || 6; const profit = +(stake * placeMultiplier[found]).toFixed(2); let text = ""; if (mode === "full") text = `以 Place ${found} 计算：赢 ${money(profit)} 后，追加 ${money(profit)}，新下注 ${money(stake + profit)}。`; if (mode === "half") { const add = Math.floor(profit / 2); text = `以 Place ${found} 计算：赢 ${money(profit)} 后，收 ${money(profit - add)}、Press ${money(add)}，新下注 ${money(stake + add)}。`; } if (mode === "collect") text = `以 Place ${found} 计算：赢 ${money(profit)} 后不加注，收下全部 ${money(profit)}。`; $("press-result").textContent = text; }
+function renderPress() {
+  const source = Number($("press-source").value); const target = Number($("press-target").value); const mode = $("press-mode").value;
+  const stake = state.places[source]; const profit = placePayout(source); const amount = mode === "full" ? profit : mode === "half" ? +(profit / 2).toFixed(2) : 0;
+  $("apply-press").disabled = !stake || mode === "collect";
+  if (!stake) { $("press-result").textContent = `Place ${source} 目前是 $0；先在上方输入下注金额。`; return; }
+  if (mode === "collect") { $("press-result").textContent = `Place ${source} 赢 ${money(profit)}：收下全部赢利，下注金额不变。`; return; }
+  $("press-result").textContent = `Place ${source} 当前 ${money(stake)}，赢 ${money(profit)} → 放 ${money(amount)} 到 Place ${target}；Place ${target} 会从 ${money(state.places[target])} 变成 ${money(state.places[target] + amount)}。`;
+}
 
-$("place-grid").innerHTML = PLACE_NUMBERS.map(n => `<label>Place ${n}<input id="place-${n}" inputmode="decimal" type="number" min="0" step="1" /></label>`).join("");
+$("place-grid").innerHTML = PLACE_NUMBERS.map(n => `<label>Place ${n}<input id="place-${n}" class="quick-input" inputmode="decimal" type="text" /></label>`).join("");
 $("roll-buttons").innerHTML = [2,3,4,5,6,7,8,9,10,11,12].map(n => `<button data-roll="${n}">${n}</button>`).join("");
+const pressOptions = PLACE_NUMBERS.map(n => `<option value="${n}">Place ${n}</option>`).join(""); $("press-source").innerHTML = pressOptions; $("press-target").innerHTML = pressOptions; $("press-source").value = 6; $("press-target").value = 6;
 syncInputs(); render();
 $("pass-line").addEventListener("input", () => { state.pass = number("pass-line"); render(); });
 $("odds").addEventListener("input", () => { state.odds = number("odds"); render(); });
 $("starting-bankroll").addEventListener("change", () => { const delta = number("starting-bankroll") - state.starting; state.starting += delta; state.bankroll += delta; render(); });
 PLACE_NUMBERS.forEach(n => $("place-" + n).addEventListener("input", () => { state.places[n] = number("place-" + n); render(); }));
-$("max-odds").addEventListener("change", () => { state.maxOdds = Number($("max-odds").value); render(); }); $("table-min").addEventListener("input", () => { state.tableMin = number("table-min"); render(); });
 $("roll-buttons").addEventListener("click", e => { if (e.target.dataset.roll) recordRoll(Number(e.target.dataset.roll)); });
 $("clear-place").onclick = () => { state.places = Object.fromEntries(PLACE_NUMBERS.map(n => [n, 0])); syncInputs(); render(); };
-$("toggle-settings").onclick = () => $("settings-content").classList.toggle("hidden"); $("press-stake").oninput = renderPress; $("press-mode").onchange = renderPress;
+$("press-source").onchange = renderPress; $("press-target").onchange = renderPress; $("press-mode").onchange = renderPress;
+$("apply-press").onclick = () => { const source = Number($("press-source").value); const target = Number($("press-target").value); const mode = $("press-mode").value; const amount = mode === "full" ? placePayout(source) : +(placePayout(source) / 2).toFixed(2); if (!state.places[source] || mode === "collect") return; state.places[target] = +(state.places[target] + amount).toFixed(2); syncInputs(); render(); };
+document.querySelectorAll(".quick-input").forEach(input => input.addEventListener("focus", () => input.select()));
 $("clear-history").onclick = () => { state.history = []; state.snapshots = []; render(); }; $("undo-roll").onclick = () => { const previous = state.snapshots.pop(); if (!previous) return; state = { ...previous, snapshots: state.snapshots }; syncInputs(); render(); };
 $("reset-session").onclick = () => { if (confirm("开始新的 session？当前记录会清除。")) { state = structuredClone(defaults); syncInputs(); render(); } };
 
