@@ -23,15 +23,13 @@
       </header>
 
       <section class="status-card" aria-label="当前状态">
-        <div class="point-badge">
-          <span>POINT</span>
-          <strong id="point-display">COME OUT</strong>
-        </div>
         <div class="status-stats">
-          <div><span>SHOOTER</span><strong id="roll-count">0 rolls</strong></div>
+          <div><span>本段 ROLLS</span><strong id="roll-count">0 rolls</strong><small id="previous-run"></small></div>
           <div><span>桌面暴露</span><strong id="exposure">$0</strong></div>
         </div>
       </section>
+      <p class="hint">每个 7 结束一段，次数包含结束的 7；下一掷从 1 开始。开局的 7 不清台，仍按正常规则结算。</p>
+      <p id="run-history" class="hint"></p>
 
       <section class="bankroll-grid">
         <label>起始 Bankroll<input id="starting-bankroll" class="quick-input" inputmode="decimal" type="text" /></label>
@@ -62,23 +60,25 @@
         <div class="roll-buttons" id="roll-buttons"></div>
       </section>
 
-      <section class="card press-card">
-        <div class="section-heading"><h2>Press 赢利分配</h2><span class="subtle">不是预测</span></div>
-        <div class="press-controls">
-          <label>哪一注赢了<select id="press-source"></select></label>
-          <label>把赢利放到<select id="press-target"></select></label>
-          <label>方式<select id="press-mode"><option value="full">全 Press</option><option value="half">半 Press</option><option value="collect">收下赢利</option></select></label>
-        </div>
-        <p id="press-result" class="press-result"></p>
-        <button id="apply-press" class="apply-press">应用 Press</button>
-        <p class="hint">Press 只是把已赢到的资金重新分配，不能提高骰子结果的可预测性或改变赌场优势。</p>
-      </section>
+      <p class="hint">记录赢利后自动询问是否 Press；Press 只分配已赢金额，不预测结果。</p>
 
       <section class="history-section">
         <div class="section-heading"><h2>Roll 记录</h2><button id="clear-history" class="text-button">清除记录</button></div>
         <ol id="history" class="history"></ol>
       </section>
     </main>
+    <dialog id="press-dialog" class="install-help" aria-labelledby="press-title">
+      <h2 id="press-title">这掷赢了</h2>
+      <p id="press-profit"></p>
+      <label>Press 到哪个数字<select id="press-target"></select></label>
+      <label>追加多少<input id="press-amount" class="quick-input" inputmode="decimal" type="text" /></label>
+      <div class="press-controls"><button id="press-half" class="text-button">一半</button><button id="press-all" class="text-button">全部</button></div>
+      <p id="press-result" aria-live="polite"></p>
+      <button id="apply-press" class="apply-press">确认 Press</button>
+      <button id="collect-profit" class="apply-press">全部收下，不 Press</button>
+      <p class="hint">赢利已经计入 Bankroll。Press 仅增加桌面下注，不会再次记赢利；金额以实际筹码为准。</p>
+    </dialog>
+    <script>window.APP_VERSION = "3";</script>
     <dialog id="install-help" class="install-help">
       <button id="close-install-help" class="close-dialog" aria-label="关闭">×</button>
       <h2>安装到手机</h2>
