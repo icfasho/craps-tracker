@@ -1,5 +1,6 @@
 :root { --bg:#f4f6f8; --ink:#102033; --muted:#657384; --card:#fff; --line:#dfe5eb; --accent:#e76f51; --green:#16785b; --red:#bd3b3b; --navy:#15283e; }
 * { box-sizing:border-box; }
+.status-stats { width:100%; justify-content:space-between; } #previous-run { display:block; margin-top:6px; color:#c6d3df; } #press-dialog label { margin-top:14px; } input,select { font-size:16px!important; }
 body { margin:0; background:var(--bg); color:var(--ink); font:16px/1.35 -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif; }
 .app-shell { max-width:680px; margin:0 auto; padding:22px 16px 42px; }
 header,.section-heading,.place-header { display:flex; align-items:center; justify-content:space-between; gap:12px; }
