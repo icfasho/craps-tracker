@@ -210,8 +210,27 @@ $("create-session").onclick = () => {
 $("session-select").onchange = () => switchSession($("session-select").value);
 $("rename-session").onclick = () => {
   const entry = sessionBook.sessions.find(s => s.id === sessionBook.activeId);
-  const name = prompt("给这场 Session 命名", entry.name);
-  if (name !== null && name.trim()) { entry.name = name.trim().slice(0, 80); render(); }
+  $("rename-input").value = entry.name;
+  $("rename-error").textContent = "";
+  $("rename-dialog").showModal();
+  $("rename-input").select();
+};
+$("cancel-rename").onclick = () => $("rename-dialog").close();
+$("rename-form").onsubmit = event => {
+  event.preventDefault();
+  const name = $("rename-input").value.trim();
+  if (!name || name.length > 80) {
+    $("rename-error").textContent = "请输入 1–80 个字符的名称。"; return;
+  }
+  const entry = sessionBook.sessions.find(s => s.id === sessionBook.activeId);
+  const previous = entry.name;
+  entry.name = name;
+  if (!save()) {
+    entry.name = previous;
+    $("rename-error").textContent = "保存失败，请重试。"; return;
+  }
+  renderSessions();
+  $("rename-dialog").close();
 };
 
 let installPrompt;
