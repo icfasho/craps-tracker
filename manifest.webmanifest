@@ -1,0 +1,11 @@
+{
+  "name": "Craps 现场助手",
+  "short_name": "Craps 助手",
+  "description": "现场 Craps bankroll、赔率与 roll 记录工具",
+  "lang": "zh-CN",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#f4f6f8",
+  "theme_color": "#15283e",
+  "icons": [{ "src": "app-icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }]
+}
