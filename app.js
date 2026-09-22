@@ -2,7 +2,8 @@ const PLACE_NUMBERS = [4, 5, 6, 8, 9, 10];
 const oddsMultiplier = { 4: 2, 5: 1.5, 6: 1.2, 8: 1.2, 9: 1.5, 10: 2 };
 const placeMultiplier = { 4: 9 / 5, 5: 7 / 5, 6: 7 / 6, 8: 7 / 6, 9: 7 / 5, 10: 9 / 5 };
 const defaults = { starting: 1000, bankroll: 1000, pass: 25, odds: 0, places: { 4: 0, 5: 0, 6: 18, 8: 18, 9: 0, 10: 0 }, point: null, rolls: 0, runs: [], pendingWin: null, history: [], snapshots: [] };
-let state = load();
+let sessionBook = loadSessions();
+let state = normalize(sessionBook.sessions.find(s => s.id === sessionBook.activeId).state);
 const $ = (id) => document.getElementById(id);
 const money = (n) => `${n < 0 ? "-" : ""}$${Math.abs(n).toLocaleString("en-US", { maximumFractionDigits: 2 })}`;
 const number = (id) => Math.max(0, Number($(id).value) || 0);
@@ -13,6 +14,50 @@ function load() {
     if (!saved) return structuredClone(defaults);
     return normalize(saved);
   } catch { return structuredClone(defaults); }
+}
+function makeSession(name, sessionState) {
+  return { id: crypto.randomUUID(), name, createdAt: new Date().toISOString(), state: sessionState };
+}
+function loadSessions() {
+  const raw = localStorage.getItem("craps-sessions-v1");
+  if (raw) {
+    const book = JSON.parse(raw);
+    if (!Array.isArray(book.sessions) || !book.sessions.length) throw Error("Session storage is invalid");
+    if (!book.sessions.some(s => s.id === book.activeId)) book.activeId = book.sessions[0].id;
+    return book;
+  }
+  const first = makeSession("Session 1", load());
+  return { activeId: first.id, sessions: [first] };
+}
+function escapeText(value) {
+  return String(value).replace(/[&<>"']/g, c => ({ "&":"&amp;", "<":"&lt;", ">":"&gt;", '"':"&quot;", "'":"&#39;" }[c]));
+}
+function renderSessions() {
+  $("session-select").innerHTML = sessionBook.sessions.map(s =>
+    `<option value="${escapeText(s.id)}">${escapeText(s.name)} · ${escapeText(new Date(s.createdAt).toLocaleDateString())} · P/L ${money(s.state.bankroll - s.state.starting)}</option>`
+  ).join("");
+  $("session-select").value = sessionBook.activeId;
+  $("session-count").textContent = `已保存 ${sessionBook.sessions.length} 场 · 仅保存在本机`;
+}
+function switchSession(id) {
+  if (!sessionBook.sessions.some(s => s.id === id) || !save()) return;
+  sessionBook.activeId = id;
+  state = normalize(sessionBook.sessions.find(s => s.id === id).state);
+  $("press-dialog").close();
+  if (state.pendingWin) { $("press-amount").value = state.pendingWin.profit; $("press-target").value = PLACE_NUMBERS.includes(state.pendingWin.roll) ? state.pendingWin.roll : 6; }
+  syncInputs(); render();
+  if (state.pendingWin) $("press-dialog").showModal();
+}
+function createSession(name, starting) {
+  if (!Number.isFinite(starting) || starting < 0 || !save()) return false;
+  const fresh = structuredClone(defaults);
+  fresh.starting = starting; fresh.bankroll = starting;
+  const entry = makeSession(name.trim().slice(0, 80) || `Session ${sessionBook.sessions.length + 1}`, fresh);
+  sessionBook.sessions.push(entry);
+  sessionBook.activeId = entry.id;
+  state = fresh;
+  syncInputs(); render();
+  return true;
 }
 function normalize(saved) {
   const merged = { ...structuredClone(defaults), ...saved, places: { ...defaults.places, ...saved.places } };
@@ -27,7 +72,17 @@ function normalize(saved) {
   }
   return merged;
 }
-function save() { localStorage.setItem("craps-tracker", JSON.stringify(state)); }
+function save() {
+  sessionBook.sessions.find(s => s.id === sessionBook.activeId).state = structuredClone(state);
+  try {
+    localStorage.setItem("craps-sessions-v1", JSON.stringify(sessionBook));
+    $("save-error").textContent = "";
+    return true;
+  } catch {
+    $("save-error").textContent = "本机保存失败，可能空间不足。请暂时不要关闭页面。";
+    return false;
+  }
+}
 function placePayout(n) { return +(state.places[n] * placeMultiplier[n]).toFixed(2); }
 function nextRollChange(roll) {
   const pointOn = Boolean(state.point);
@@ -57,7 +112,7 @@ function render() {
   const pl = +(state.bankroll - state.starting).toFixed(2); const plNode = $("session-pl"); plNode.textContent = `${pl >= 0 ? "+" : ""}${money(pl)}`; plNode.className = pl >= 0 ? "positive" : "negative";
   renderOutcomes();
   $("history").innerHTML = state.history.length ? state.history.slice(0, 12).map(h => `<li><span>${h.label}</span><span class="${h.delta >= 0 ? "positive" : "negative"}">${h.delta >= 0 ? "+" : ""}${money(h.delta)} · ${money(h.balance)}</span></li>`).join("") : '<li class="empty">还没有记录 roll。</li>';
-  renderPress(); save();
+  renderPress(); save(); renderSessions();
 }
 function outcomeCard(label, delta, neutral = false) { return `<div class="outcome"><b>${label}</b><span class="${neutral ? "neutral" : delta >= 0 ? "positive" : "negative"}">${neutral ? "无即时盈亏" : `${delta >= 0 ? "+" : ""}${money(delta)}`}</span></div>`; }
 function renderOutcomes() {
@@ -137,7 +192,27 @@ $("press-dialog").addEventListener("cancel", event => { event.preventDefault(); 
 if (state.pendingWin) $("press-dialog").showModal();
 document.querySelectorAll(".quick-input").forEach(input => input.addEventListener("focus", () => input.select()));
 $("clear-history").onclick = () => { state.history = []; state.snapshots = []; render(); }; $("undo-roll").onclick = () => { const previous = state.snapshots.pop(); if (!previous) return; state = normalize({ ...previous, snapshots: state.snapshots }); syncInputs(); render(); };
-$("reset-session").onclick = () => { if (confirm("开始新的 session？当前记录会清除。")) { state = structuredClone(defaults); syncInputs(); render(); } };
+$("reset-session").onclick = () => {
+  $("new-session-name").value = `Session ${sessionBook.sessions.length + 1}`;
+  $("new-session-bankroll").value = state.starting;
+  $("new-session-dialog").showModal();
+};
+$("cancel-session").onclick = () => $("new-session-dialog").close();
+$("create-session").onclick = () => {
+  const starting = Number($("new-session-bankroll").value);
+  if ($("new-session-bankroll").value.trim() === "" || !Number.isFinite(starting) || starting < 0) {
+    $("new-session-error").textContent = "请输入有效的起始金额。"; return;
+  }
+  if (createSession($("new-session-name").value, starting)) {
+    $("new-session-dialog").close(); $("new-session-error").textContent = "";
+  }
+};
+$("session-select").onchange = () => switchSession($("session-select").value);
+$("rename-session").onclick = () => {
+  const entry = sessionBook.sessions.find(s => s.id === sessionBook.activeId);
+  const name = prompt("给这场 Session 命名", entry.name);
+  if (name !== null && name.trim()) { entry.name = name.trim().slice(0, 80); render(); }
+};
 
 let installPrompt;
 window.addEventListener("beforeinstallprompt", (event) => { event.preventDefault(); installPrompt = event; $("install-app").textContent = "安装 App"; });
