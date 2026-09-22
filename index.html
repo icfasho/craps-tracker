@@ -10,7 +10,7 @@
     <link rel="manifest" href="manifest.webmanifest" />
     <link rel="apple-touch-icon" href="app-icon.svg" />
     <title>Craps 现场助手</title>
-    <link rel="stylesheet" href="styles.css?v=4" />
+    <link rel="stylesheet" href="styles.css?v=5" />
   </head>
   <body>
     <main class="app-shell">
@@ -22,6 +22,12 @@
         <div class="header-actions"><button id="install-app" class="install-button">安装到手机</button><button id="reset-session" class="text-button">新 Session</button></div>
       </header>
 
+      <section class="card" style="margin-bottom:12px">
+        <div class="section-heading"><h2>我的 Sessions</h2><button id="rename-session" class="text-button">改名</button></div>
+        <label>选择一场继续记录<select id="session-select"></select></label>
+        <p id="session-count" class="hint"></p>
+        <p id="save-error" class="warning" role="alert"></p>
+      </section>
       <section class="status-card" aria-label="当前状态">
         <div class="status-stats">
           <div><span>本段 ROLLS</span><strong id="roll-count">0 rolls</strong><small id="previous-run"></small></div>
@@ -63,7 +69,7 @@
 
       <section class="history-section">
         <div class="section-heading"><h2>每段 Roll 历史</h2><span id="run-total" class="subtle"></span></div>
-        <p class="hint">本 Session 全部记录，按时间先后排列；已结束的段包含最后那个 7。刷新后保留，新 Session 会清空。</p>
+        <p class="hint">本 Session 全部记录，按时间先后排列；已结束的段包含最后那个 7。新建 Session 后，这场记录仍保留。</p>
         <ol id="run-history" class="history"></ol>
       </section>
 
@@ -83,12 +89,21 @@
       <button id="collect-profit" class="apply-press">全部收下，不 Press</button>
       <p class="hint">赢利已经计入 Bankroll。Press 仅增加桌面下注，不会再次记赢利；金额以实际筹码为准。</p>
     </dialog>
-    <script>window.APP_VERSION = "4";</script>
+    <dialog id="new-session-dialog" class="install-help" aria-labelledby="new-session-title">
+      <h2 id="new-session-title">新 Session</h2>
+      <p>当前这场会自动保存，随时可以切换回来。</p>
+      <label>名称<input id="new-session-name" maxlength="80" type="text" /></label>
+      <label>起始 Bankroll<input id="new-session-bankroll" class="quick-input" inputmode="decimal" type="text" /></label>
+      <p id="new-session-error" class="warning" role="alert"></p>
+      <button id="create-session" class="apply-press">保存旧场，开始新场</button>
+      <button id="cancel-session" class="text-button">取消</button>
+    </dialog>
+    <script>window.APP_VERSION = "5";</script>
     <dialog id="install-help" class="install-help">
       <button id="close-install-help" class="close-dialog" aria-label="关闭">×</button>
       <h2>安装到手机</h2>
       <div id="install-help-copy"></div>
     </dialog>
-    <script src="app.js?v=4"></script>
+    <script src="app.js?v=5"></script>
   </body>
 </html>
