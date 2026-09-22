@@ -1,0 +1,98 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#111827" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="Craps 助手" />
+    <link rel="manifest" href="manifest.webmanifest" />
+    <link rel="apple-touch-icon" href="app-icon.svg" />
+    <title>Craps 现场助手</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <main class="app-shell">
+      <header>
+        <div>
+          <p class="eyebrow">CASINO SESSION TOOL</p>
+          <h1>Craps 现场助手</h1>
+        </div>
+        <div class="header-actions"><button id="install-app" class="install-button">安装到手机</button><button id="reset-session" class="text-button">新 Session</button></div>
+      </header>
+
+      <section class="status-card" aria-label="当前状态">
+        <div class="point-badge">
+          <span>POINT</span>
+          <strong id="point-display">COME OUT</strong>
+        </div>
+        <div class="status-stats">
+          <div><span>SHOOTER</span><strong id="roll-count">0 rolls</strong></div>
+          <div><span>桌面暴露</span><strong id="exposure">$0</strong></div>
+        </div>
+      </section>
+
+      <section class="bankroll-grid">
+        <label>起始 Bankroll<input id="starting-bankroll" inputmode="decimal" type="number" min="0" step="1" /></label>
+        <div class="metric"><span>当前 Bankroll</span><strong id="bankroll">$0</strong></div>
+        <div class="metric"><span>Session P/L</span><strong id="session-pl">$0</strong></div>
+      </section>
+
+      <section class="card">
+        <div class="section-heading"><h2>当前下注</h2><span id="odds-warning" class="warning"></span></div>
+        <div class="bet-grid primary-bets">
+          <label>Pass Line<input id="pass-line" inputmode="decimal" type="number" min="0" step="1" /></label>
+          <label>Odds<input id="odds" inputmode="decimal" type="number" min="0" step="1" /></label>
+        </div>
+        <p class="hint">Odds 仅在 point 建立后生效；按真实赔率支付，赌场优势为 0%。</p>
+        <div class="place-header"><h3>Place Bets</h3><button id="clear-place" class="text-button">清空</button></div>
+        <div class="place-grid" id="place-grid"></div>
+      </section>
+
+      <section class="card outcomes">
+        <div class="section-heading"><h2>下一掷的结果</h2><span class="subtle">净变化</span></div>
+        <div id="outcome-grid" class="outcome-grid"></div>
+        <div class="summary-row"><span id="target-label">Point 命中</span><strong id="target-win">+$0</strong><span>7-out</span><strong id="seven-loss">-$0</strong></div>
+      </section>
+
+      <section class="card roll-card">
+        <div class="section-heading"><h2>记录 Roll</h2><button id="undo-roll" class="text-button">撤销</button></div>
+        <p class="hint">点数建立时 Place bets 视为 working；come-out 时不计算 Place 赢利。</p>
+        <div class="roll-buttons" id="roll-buttons"></div>
+      </section>
+
+      <section class="card settings-card">
+        <div class="section-heading"><h2>桌规</h2><button id="toggle-settings" class="text-button">展开</button></div>
+        <div id="settings-content" class="settings-content hidden">
+          <label>最大 Odds 倍数
+            <select id="max-odds"><option value="2">2x</option><option value="3">3x</option><option value="5">5x</option><option value="10">10x</option><option value="20">20x</option></select>
+          </label>
+          <label>最低下注<input id="table-min" inputmode="decimal" type="number" min="1" step="1" /></label>
+          <p class="hint">不同赌场可能有整数筹码和赔率取整规则；最终以 dealer 的处理和桌规为准。</p>
+        </div>
+      </section>
+
+      <section class="card press-card">
+        <div class="section-heading"><h2>Press 计算器</h2><span class="subtle">不是预测</span></div>
+        <div class="press-controls">
+          <label>当前下注<input id="press-stake" inputmode="decimal" type="number" min="0" step="1" value="18" /></label>
+          <label>方式<select id="press-mode"><option value="full">全 Press</option><option value="half">半 Press</option><option value="collect">收下赢利</option></select></label>
+        </div>
+        <p id="press-result" class="press-result"></p>
+        <p class="hint">Press 只是把已赢到的资金重新分配，不能提高骰子结果的可预测性或改变赌场优势。</p>
+      </section>
+
+      <section class="history-section">
+        <div class="section-heading"><h2>Roll 记录</h2><button id="clear-history" class="text-button">清除记录</button></div>
+        <ol id="history" class="history"></ol>
+      </section>
+    </main>
+    <dialog id="install-help" class="install-help">
+      <button id="close-install-help" class="close-dialog" aria-label="关闭">×</button>
+      <h2>安装到手机</h2>
+      <div id="install-help-copy"></div>
+    </dialog>
+    <script src="app.js"></script>
+  </body>
+</html>
