@@ -10,7 +10,7 @@
     <link rel="manifest" href="manifest.webmanifest" />
     <link rel="apple-touch-icon" href="app-icon.svg" />
     <title>Craps 现场助手</title>
-    <link rel="stylesheet" href="styles.css?v=5" />
+    <link rel="stylesheet" href="styles.css?v=6" />
   </head>
   <body>
     <main class="app-shell">
@@ -98,12 +98,21 @@
       <button id="create-session" class="apply-press">保存旧场，开始新场</button>
       <button id="cancel-session" class="text-button">取消</button>
     </dialog>
-    <script>window.APP_VERSION = "5";</script>
+    <dialog id="rename-dialog" class="install-help" aria-labelledby="rename-title">
+      <form id="rename-form">
+        <h2 id="rename-title">修改 Session 名称</h2>
+        <label>名称<input id="rename-input" type="text" maxlength="80" autocomplete="off" /></label>
+        <p id="rename-error" class="warning" role="alert"></p>
+        <button type="submit" class="apply-press">保存名称</button>
+        <button type="button" id="cancel-rename" class="text-button">取消</button>
+      </form>
+    </dialog>
+    <script>window.APP_VERSION = "6";</script>
     <dialog id="install-help" class="install-help">
       <button id="close-install-help" class="close-dialog" aria-label="关闭">×</button>
       <h2>安装到手机</h2>
       <div id="install-help-copy"></div>
     </dialog>
-    <script src="app.js?v=5"></script>
+    <script src="app.js?v=6"></script>
   </body>
 </html>
